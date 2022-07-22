@@ -1,0 +1,239 @@
+{\rtf1\ansi\deff0\nouicompat{\fonttbl{\f0\fnil\fcharset0 Calibri;}}
+{\*\generator Riched20 10.0.19041}\viewkind4\uc1 
+\pard\sa200\sl276\slmult1\ul\b\f0\fs22\lang9 SRC Code\par
+\ulnone Created By: Siddhant Somani\par
+Simplilearn Phase 4 Project for QuizApp\par
+Batch/Cohort: MS FSD Apr 2022 cohort 3\par
+\par
+\par
+headder.html component\b0\par
+<nav class="navbar navbar-dark bg-primary">\par
+    <div class="container-fluid">\par
+      <a class="navbar-brand text-bold" href="#">\par
+        <img src="https://img.icons8.com/color/96/000000/angularjs.png" alt="logo" width="50">\par
+        <span class="text-uppercase">ngular Quiz</span>\par
+      </a>\par
+    </div>\par
+  </nav>\par
+\b question.css component\b0\par
+.card\{\par
+    margin: auto;\par
+    padding: 10px;\par
+\}\par
+li\{\par
+    list-style-type: none;\par
+    cursor: pointer;\par
+    margin: 10px 0;\par
+\}\par
+li .card:hover\{\par
+    border: 1px solid blue;\par
+\par
+\}\par
+ol\{\par
+    padding: 0;\par
+\}\par
+\b Question.html component\par
+\b0 <div class="container mt-5">\par
+    <div class="card">\par
+        <div class="d-flex justify-content-between p-3">\par
+            <div class="image">\par
+                <img src="https://img.icons8.com/color/96/000000/angularjs.png" alt="logo" width="90">\par
+            </div>\par
+            <div class="quiz-header">\par
+                <h4>Angular & TypeScript Quiz</h4>\par
+                <span style="font-style:italic;">Welcome \{\{name\}\}</span>\par
+            </div>\par
+        </div>\par
+       <ng-container *ngIf="!isQuizCompleted">\par
+        <div class="d-flex justify-content-around py-3">\par
+            <div class="score">\par
+                <h5>\{\{points\}\} Points</h5>\par
+            </div>\par
+            <div class="question-remain">\par
+                <span style="font-style: italic;">Question \{\{currentQuestion+1\}\} of \{\{questionList.length\}\}</span>\par
+            </div>\par
+            <div class="timer">\par
+                <h5>\{\{counter\}\} sec</h5>\par
+            </div>\par
+        </div>\par
+        <div class="progress mg-3">\par
+            <div class="progress-bar progress-bar-striped bg-success" role="progressbar" [ngStyle]="\{'width':progress+'%'\}" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>\par
+        </div>\par
+        <div class="questions">\par
+            <div class="card">\par
+                <h3>\{\{questionList[currentQuestion]?.questionText\}\}</h3>\par
+            </div>\par
+        </div>\par
+        <div class="options">\par
+            <ol *ngFor="let option of questionList[currentQuestion]?.options">\par
+                <li (click)="answer(currentQuestion+1,option)">\par
+                    <div appChangeBg [isCorrect]="option.correct" class="card">\par
+                     \{\{option.text\}\}\par
+                    </div>\par
+                </li>\par
+                \par
+            </ol>\par
+        </div>\par
+        <div class="d-flex justify-content-between">\par
+            <button [disabled]="currentQuestion===0" class="btn" (click)="previousQuestion()"><i class="fa text-primary fa-chevron-left fa-2x" aria-hidden="true"></i></button>\par
+            <button class="btn" (click)="resetQuiz()"><i class="fa text-primary fa-refresh fa-2x" aria-hidden="true"></i></button>\par
+            <button class="btn" (click)="nextQuestion()"><i class="fa text-primary fa-chevron-right fa-2x" aria-hidden="true"></i></button>\par
+        </div>\par
+       </ng-container>\par
+\par
+       <ng-container *ngIf="isQuizCompleted">\par
+        <div class="row d-flex justify-content-between">\par
+            <div class="result text-center col-md-6 col-sm-12">\par
+                <p>Total Question Attempted : \{\{questionList.length\}\} </p>\par
+                <p>Total Correct Answered : \{\{correctAnswer\}\} </p>\par
+                <p>Total Incorrect Answered : \{\{inCorrectAnswer\}\} </p>\par
+                <p>Your Score : \{\{points\}\}</p>\par
+            </div>\par
+        </div>\par
+       </ng-container>\par
+    </div>\par
+</div>\b\par
+Question.component.ts\par
+\b0 import \{ Component, OnInit \} from '@angular/core';\par
+import \{ interval \} from 'rxjs';\par
+import \{ QuestionService \} from '../service/question.service';\par
+\par
+@Component(\{\par
+  selector: 'app-question',\par
+  templateUrl: './question.component.html',\par
+  styleUrls: ['./question.component.css']\par
+\})\par
+export class QuestionComponent implements OnInit \{\par
+\par
+  public name: String=" ";\par
+  public questionList: any = [];\par
+  public currentQuestion:number=0;\par
+  public points: number=0;\par
+  counter=60;\par
+  correctAnswer:number=0;\par
+  inCorrectAnswer:number=0;\par
+  interval$:any;\par
+  progress: string="0";\par
+  isQuizCompleted: boolean = false;\par
+\par
+  constructor(private questionService : QuestionService) \{ \}\par
+\par
+  ngOnInit(): void \{\par
+    this.name = localStorage.getItem("name")!;\par
+    this.getAllQuestions();\par
+    this.startCounter();\par
+  \}\par
+  getAllQuestions()\{\par
+    this.questionService.getQuestionJson()\par
+    .subscribe(res=>\{\par
+     this.questionList=res.questions;\par
+\par
+    \})\par
+  \}\par
+  nextQuestion()\{\par
+    this.currentQuestion++;\par
+  \}\par
+  previousQuestion()\{\par
+    this.currentQuestion--;\par
+  \}\par
+  answer(currentQno:number,option:any)\{\par
+    if(currentQno===this.questionList.length)\{\par
+      this.isQuizCompleted=true;\par
+      this.stopCounter();\par
+    \}\par
+    if(option.correct)\{\par
+      this.points+=10;\par
+      //this.points=this.points+10;\par
+      this.correctAnswer++;\par
+      setTimeout(() => \{\par
+        this.currentQuestion++;\par
+        this.resetCounter();\par
+        this.getProgressPercent();\par
+      \}, 1000);\par
+      \par
+    \}else\{\par
+      setTimeout(() => \{\par
+        this.currentQuestion++;\par
+        this.inCorrectAnswer++; \par
+      this.resetCounter();\par
+      this.getProgressPercent();\par
+      \}, 1000);\par
+      this.points-=10;\par
+      \par
+    \}\par
+  \}\par
+  startCounter()\{\par
+    this.interval$=interval(1000)\par
+    .subscribe(val=>\{\par
+      this.counter--;\par
+      if(this.counter===0)\{\par
+        this.currentQuestion++;\par
+        this.counter=60000;\par
+        this.points-=10;\par
+      \}\par
+    \});\par
+    setTimeout(()=>\{\par
+      this.interval$.unsubscribe()\par
+    \},60);\par
+\par
+  \}\par
+  stopCounter()\{\par
+    this.interval$.unsubscribe;\par
+    this.counter=0;\par
+  \}\par
+  resetCounter()\{\par
+    this.startCounter();\par
+    this.counter=60;\par
+    this.startCounter();\par
+  \}\par
+  resetQuiz()\{\par
+    this.resetCounter();\par
+    this.getAllQuestions();\par
+    this.points=0;\par
+    this.counter=60;\par
+    this.currentQuestion=0;\par
+    this.progress="0";\par
+  \}\par
+  getProgressPercent()\{\par
+    this.progress=((this.currentQuestion/this.questionList.lenth)*100).toString();\par
+    return this.progress;\par
+  \}\par
+\}\b\par
+Question.service.ts\par
+\b0 import \{ Injectable \} from '@angular/core';\par
+import\{HttpClient\} from '@angular/common/http' \par
+@Injectable(\{\par
+  providedIn: 'root'\par
+\})\par
+export class QuestionService \{\par
+\par
+  constructor(private http : HttpClient) \{ \}\par
+\par
+  getQuestionJson()\{\par
+    return this.http.get<any>("assets/questions.json")\par
+  \} \par
+\}\par
+\b App.routing.module.ts\par
+\b0 import \{ NgModule \} from '@angular/core';\par
+import \{ RouterModule, Routes \} from '@angular/router';\par
+import \{ QuestionComponent \} from './question/question.component';\par
+import \{ WelcomeComponent \} from './welcome/welcome.component';\par
+\par
+const routes: Routes = [\par
+\{path:" ", redirectTo:'welcome', pathMatch:"full"\},\par
+\{path:"welcome", component:WelcomeComponent\},\par
+\{path:"question", component:QuestionComponent\},\par
+];\par
+\par
+@NgModule(\{\par
+  imports: [RouterModule.forRoot(routes)],\par
+  exports: [RouterModule]\par
+\})\par
+export class AppRoutingModule \{ \}\par
+\b app.component.html\par
+\b0 <app-header></app-header>\par
+<app-welcome></app-welcome>\par
+<router-outlet></router-outlet>\par
+\b\par
+}
+ 
